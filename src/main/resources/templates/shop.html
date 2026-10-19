@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('商城浏览')}"></head>
+<body>
+
+<aside th:replace="~{fragments :: sidebar('shop')}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('商城浏览', '像逛淘宝一样浏览全部在售商品')}"></header>
+
+    <main class="shop-wrap">
+        <!-- 橙色 Banner + 搜索 -->
+        <section class="shop-hero">
+            <h1>🍓 鮮果商城</h1>
+            <p>鲜果 · 热带水果 · 莓果 · 瓜果，产地直送新鲜到家</p>
+            <form class="shop-search" th:action="@{/shop}" method="get">
+                <input type="hidden" name="categoryId" th:value="${categoryId}">
+                <input type="hidden" name="brandId" th:value="${brandId}">
+                <input type="text" name="keyword" th:value="${keyword}" placeholder="搜索水果，如：苹果、芒果、草莓…">
+                <button type="submit">搜 索</button>
+            </form>
+        </section>
+
+        <!-- 分类 / 品牌 / 排序 -->
+        <section class="shop-toolbar">
+            <div class="shop-filter-row">
+                <span class="filter-label">分类</span>
+                <a class="shop-chip" th:classappend="${categoryId == null} ? ' active'"
+                   th:href="@{/shop(keyword=${keyword},brandId=${brandId},sort=${sort},dir=${dir})}">全部</a>
+                <a class="shop-chip" th:each="c : ${categories}"
+                   th:classappend="${categoryId != null && categoryId.equals(c.id)} ? ' active'"
+                   th:href="@{/shop(keyword=${keyword},categoryId=${c.id},brandId=${brandId},sort=${sort},dir=${dir})}"
+                   th:text="${c.icon} + ' ' + ${c.name}">分类</a>
+            </div>
+            <div class="shop-filter-row">
+                <span class="filter-label">品牌</span>
+                <a class="shop-chip" th:classappend="${brandId == null} ? ' active'"
+                   th:href="@{/shop(keyword=${keyword},categoryId=${categoryId},sort=${sort},dir=${dir})}">全部</a>
+                <a class="shop-chip" th:each="b : ${brands}"
+                   th:classappend="${brandId != null && brandId.equals(b.id)} ? ' active'"
+                   th:href="@{/shop(keyword=${keyword},categoryId=${categoryId},brandId=${b.id},sort=${sort},dir=${dir})}"
+                   th:text="${b.name}">品牌</a>
+            </div>
+            <div class="shop-filter-row">
+                <span class="filter-label">排序</span>
+                <a class="sort-tab" th:classappend="${sort == 'createTime'} ? ' active'"
+                   th:href="@{/shop(keyword=${keyword},categoryId=${categoryId},brandId=${brandId},sort='createTime',dir='desc')}">综合</a>
+                <a class="sort-tab" th:classappend="${sort == 'sales'} ? ' active'"
+                   th:href="@{/shop(keyword=${keyword},categoryId=${categoryId},brandId=${brandId},sort='sales',dir='desc')}">销量优先</a>
+                <a class="sort-tab" th:classappend="${sort == 'price'} ? ' active'"
+                   th:href="@{/shop(keyword=${keyword},categoryId=${categoryId},brandId=${brandId},sort='price',dir=${sort == 'price' && dir == 'asc' ? 'desc' : 'asc'})}">
+                    价格<span class="arrow" th:text="${sort == 'price' ? (dir == 'asc' ? '↑' : '↓') : '⇅'}">⇅</span>
+                </a>
+                <a class="sort-tab" th:classappend="${sort == 'id'} ? ' active'"
+                   th:href="@{/shop(keyword=${keyword},categoryId=${categoryId},brandId=${brandId},sort='id',dir='desc')}">新品</a>
+            </div>
+        </section>
+
+        <!-- 商品卡片网格 -->
+        <section class="shop-grid" th:if="${!products.isEmpty()}">
+            <article class="product-card" th:each="p : ${products}">
+                <div class="pc-img-wrap">
+                    <img th:if="${p.imageUrl != null and !p.imageUrl.isEmpty()}"
+                         th:src="${p.imageUrl}" alt="${p.name}" loading="lazy"
+                         onerror="this.style.display='none';var f=this.nextElementSibling;if(f){f.style.display='flex';}">
+                    <div class="pc-img-fallback" style="display:none">📦</div>
+                    <span class="pc-badge low" th:if="${p.stock > 0 && p.stock < 50}">
+                        仅剩 <span th:text="${p.stock}">0</span> 件
+                    </span>
+                </div>
+                <div class="pc-body">
+                    <div class="pc-tags">
+                        <span class="pc-tag" th:text="${p.category.icon} + ' ' + ${p.category.name}">分类</span>
+                        <span class="pc-tag" th:if="${p.brand != null}" th:text="${p.brand.name}">品牌</span>
+                    </div>
+                    <div class="pc-title" th:text="${p.name}">商品名称</div>
+                    <div class="pc-bottom">
+                        <div class="pc-price">
+                            <span class="yen">¥</span><span class="num" th:text="${#numbers.formatDecimal(p.price, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                        </div>
+                        <div class="pc-sales">已售 <span th:text="${p.sales}">0</span> 件</div>
+                    </div>
+                    <div class="pc-actions">
+                        <form th:action="@{/cart/add}" method="post" class="inline-form">
+                            <input type="hidden" name="productId" th:value="${p.id}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn-cart-add">🛒 加入购物车</button>
+                        </form>
+                        <form th:action="@{/cart/add}" method="post" class="inline-form">
+                            <input type="hidden" name="productId" th:value="${p.id}">
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="buyNow" value="true">
+                            <button type="submit" class="btn-buy-now">⚡ 立即购买</button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="shop-grid" th:if="${products.isEmpty()}">
+            <div class="shop-empty">
+                <div class="big">🔍</div>
+                <div>没有找到符合条件的商品，换个关键词试试吧</div>
+            </div>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

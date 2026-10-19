@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('数据仪表盘')}"></head>
+<body>
+<aside th:replace="~{fragments :: sidebar('dashboard')}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('数据仪表盘', '实时掌握水果销售与库存动态')}"></header>
+
+    <main class="content">
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon c1">📦</div>
+                <div class="stat-info">
+                    <div class="num" th:text="${productCount}">0</div>
+                    <div class="label">商品总数</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon c2">✅</div>
+                <div class="stat-info">
+                    <div class="num" th:text="${onSaleCount}">0</div>
+                    <div class="label">在售商品</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon c3">📈</div>
+                <div class="stat-info">
+                    <div class="num" th:text="${#numbers.formatInteger(totalStock, 0, 'COMMA')}">0</div>
+                    <div class="label">库存总件数</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon c4">💰</div>
+                <div class="stat-info">
+                    <div class="num"><span style="font-size:15px">¥</span><span th:text="${#numbers.formatDecimal(inventoryValue, 1, 'COMMA', 2, 'POINT')}">0.00</span></div>
+                    <div class="label">库存总价值 · 累计销量 <b th:text="${#numbers.formatInteger(totalSales, 0, 'COMMA')}">0</b> 件</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dash-grid">
+            <!-- 库存预警 -->
+            <div class="card">
+                <div class="card-title"><span class="bar"></span>⚠️ 库存预警 <small style="font-weight:400;color:var(--text-3)">在售且库存低于 50 件</small></div>
+                <div class="mini-list">
+                    <div class="mini-row" th:each="p : ${lowStockProducts}">
+                        <span th:text="${p.category.icon}">📱</span>
+                        <span class="m-name" th:text="${p.name}">商品名</span>
+                        <span class="m-cat" th:text="${p.category.name}">分类</span>
+                        <span class="m-stock" th:text="'剩 ' + ${p.stock}">剩 0</span>
+                    </div>
+                    <div class="empty-tip" th:if="${#lists.isEmpty(lowStockProducts)}">🎉 库存充足，暂无预警商品</div>
+                </div>
+            </div>
+
+            <!-- 分类分布 -->
+            <div class="card">
+                <div class="card-title"><span class="bar"></span>🏷️ 分类商品分布</div>
+                <div class="cat-bars">
+                    <div class="cat-bar-row" th:each="c : ${categoryStats}">
+                        <span class="c-name"><span th:text="${c.icon}">📱</span><span th:text="${c.name}">分类</span></span>
+                        <span class="cat-bar-track">
+                            <span class="cat-bar-fill" th:style="'width:' + ${c.percent} + '%'"></span>
+                        </span>
+                        <span class="cat-bar-val" th:text="${c.productCount} + ' 件 / 库存' + ${c.stock}">0</span>
+                    </div>
+                    <div class="empty-tip" th:if="${#lists.isEmpty(categoryStats)}">暂无分类数据</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 品牌分布 -->
+        <div class="card" style="margin-bottom:18px" th:if="${!brandStats.isEmpty()}">
+            <div class="card-title"><span class="bar"></span>🏷️ 品牌商品分布</div>
+            <div class="viz-bars">
+                <div class="viz-bar-row" th:each="b : ${brandStats}">
+                    <span class="v-name">
+                        <span th:if="${b.logo != null and !b.logo.isEmpty()}" th:text="${b.logo}">🏷️</span>
+                        <span th:if="${b.logo == null or b.logo.isEmpty()}" style="font-weight:700;color:var(--primary)" th:text="${#strings.substring(b.name,0,1)}">B</span>
+                        <span th:text="${b.name}">品牌</span>
+                    </span>
+                    <span class="viz-bar-track">
+                        <span class="viz-bar-fill brand-fill" th:style="'width:' + ${b.percent} + '%'" th:text="${b.percent} + '%'">50%</span>
+                    </span>
+                    <span class="viz-bar-val" th:text="${b.productCount} + ' 件 · 库存' + ${b.stock}">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快捷入口 -->
+        <div class="card">
+            <div class="card-title"><span class="bar"></span>⚡ 快捷操作</div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <a class="btn btn-primary" th:href="@{/shop}">🛍️ 逛商城</a>
+                <a class="btn btn-ghost" th:href="@{/cart}">🛒 购物车</a>
+                <a class="btn btn-ghost" th:href="@{/orders}">📋 我的订单</a>
+                <a class="btn btn-ghost" th:href="@{/products}">📦 查看全部商品</a>
+                <a class="btn btn-ghost" th:href="@{/categories}">🗂️ 管理水果分类</a>
+                <a class="btn btn-ghost" th:href="@{/brands}">🏷️ 管理产地品牌</a>
+                <a class="btn btn-ghost" th:if="${loginUser.admin}" th:href="@{/products/new}">➕ 新增商品</a>
+                <a class="btn btn-ghost" th:if="${loginUser.admin}" th:href="@{/brands/new}">➕ 新增品牌</a>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

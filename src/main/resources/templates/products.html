@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('商品管理')}"></head>
+<body>
+<aside th:replace="~{fragments :: sidebar('products')}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('水果管理', '水果查询、筛选、排序与上下架管理')}"></header>
+
+    <main class="content">
+        <div class="flash" th:if="${message}">✅ <span th:text="${message}"></span></div>
+
+        <!-- 统计卡片 -->
+        <div class="product-stats-bar">
+            <div class="p-stat">
+                <div class="p-stat-ico s1">📦</div>
+                <div><div class="p-stat-num" th:text="${productCount}">0</div><div class="p-stat-label">商品总数</div></div>
+            </div>
+            <div class="p-stat">
+                <div class="p-stat-ico s2">✅</div>
+                <div><div class="p-stat-num" th:text="${onSaleCount}">0</div><div class="p-stat-label">在售</div></div>
+            </div>
+            <div class="p-stat">
+                <div class="p-stat-ico s3">📦</div>
+                <div><div class="p-stat-num" th:text="${offSaleCount}">0</div><div class="p-stat-label">已下架</div></div>
+            </div>
+            <div class="p-stat">
+                <div class="p-stat-ico s4">📊</div>
+                <div><div class="p-stat-num" th:text="${#numbers.formatInteger(totalStock, 0, 'COMMA')}">0</div><div class="p-stat-label">库存总数</div></div>
+            </div>
+            <div class="p-stat">
+                <div class="p-stat-ico s5">💰</div>
+                <div><div class="p-stat-num"><span style="font-size:13px">¥</span><span th:text="${#numbers.formatDecimal(inventoryValue, 1, 'COMMA', 0, 'POINT')}">0</span></div><div class="p-stat-label">库存价值</div></div>
+            </div>
+        </div>
+
+        <!-- 分类筛选 -->
+        <div class="chips" style="margin-bottom:10px">
+            <a class="chip" th:classappend="${categoryId == null} ? ' active'"
+               th:href="@{/products(keyword=${keyword},brandId=${brandId},sort=${sort},dir=${dir})}">
+                🌐 全部分类
+            </a>
+            <a class="chip" th:each="c : ${categories}"
+               th:classappend="${categoryId != null && categoryId.equals(c.id)} ? ' active'"
+               th:href="@{/products(keyword=${keyword},categoryId=${c.id},brandId=${brandId},sort=${sort},dir=${dir})}">
+                <span th:text="${c.icon}">📱</span> <span th:text="${c.name}">分类</span>
+            </a>
+        </div>
+
+        <!-- 品牌筛选 -->
+        <div class="chips" style="margin-bottom:16px">
+            <a class="chip" th:classappend="${brandId == null} ? ' active'"
+               th:href="@{/products(keyword=${keyword},categoryId=${categoryId},sort=${sort},dir=${dir})}">
+                🏷️ 全部品牌
+            </a>
+            <a class="chip" th:each="b : ${brands}"
+               th:classappend="${brandId != null && brandId.equals(b.id)} ? ' active'"
+               th:href="@{/products(keyword=${keyword},categoryId=${categoryId},brandId=${b.id},sort=${sort},dir=${dir})}">
+                <span th:text="${b.logo != null and !b.logo.isEmpty() ? b.logo : '🏷️'}">🏷️</span> <span th:text="${b.name}">品牌</span>
+            </a>
+        </div>
+
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <form class="search-box" th:action="@{/products}" method="get">
+                <input type="hidden" name="categoryId" th:value="${categoryId}">
+                <input type="hidden" name="brandId" th:value="${brandId}">
+                <input type="hidden" name="sort" th:value="${sort}">
+                <input type="hidden" name="dir" th:value="${dir}">
+                <input type="text" name="keyword" th:value="${keyword}" placeholder="🔍 搜索商品名称 / 描述">
+                <button type="submit" class="btn btn-primary btn-sm">搜索</button>
+                <a class="btn btn-ghost btn-sm" th:href="@{/products}">重置</a>
+            </form>
+            <a class="btn btn-primary" th:if="${loginUser.admin}" th:href="@{/products/new}">➕ 新增商品</a>
+        </div>
+
+        <!-- 商品表 -->
+        <div class="card table-card">
+            <table>
+                <thead>
+                <tr>
+                    <th style="width:54px"><a th:href="@{/products(keyword=${keyword},categoryId=${categoryId},brandId=${brandId},sort='id',dir=${sort=='id' && dir=='asc' ? 'desc' : 'asc'})}">ID<span class="arrow" th:if="${sort=='id'}" th:text="${dir=='asc' ? ' ↑' : ' ↓'}"></span></a></th>
+                    <th><a th:href="@{/products(keyword=${keyword},categoryId=${categoryId},brandId=${brandId},sort='name',dir=${sort=='name' && dir=='asc' ? 'desc' : 'asc'})}">商品名称<span class="arrow" th:if="${sort=='name'}" th:text="${dir=='asc' ? ' ↑' : ' ↓'}"></span></a></th>
+                    <th><a th:href="@{/products(keyword=${keyword},categoryId=${categoryId},brandId=${brandId},sort='category',dir=${sort=='category' && dir=='asc' ? 'desc' : 'asc'})}">分类<span class="arrow" th:if="${sort=='category'}" th:text="${dir=='asc' ? ' ↑' : ' ↓'}"></span></a></th>
+                    <th><a th:href="@{/products(keyword=${keyword},categoryId=${categoryId},brandId=${brandId},sort='brand',dir=${sort=='brand' && dir=='asc' ? 'desc' : 'asc'})}">品牌<span class="arrow" th:if="${sort=='brand'}" th:text="${dir=='asc' ? ' ↑' : ' ↓'}"></span></a></th>
+                    <th><a th:href="@{/products(keyword=${keyword},categoryId=${categoryId},brandId=${brandId},sort='price',dir=${sort=='price' && dir=='asc' ? 'desc' : 'asc'})}">价格<span class="arrow" th:if="${sort=='price'}" th:text="${dir=='asc' ? ' ↑' : ' ↓'}"></span></a></th>
+                    <th><a th:href="@{/products(keyword=${keyword},categoryId=${categoryId},brandId=${brandId},sort='stock',dir=${sort=='stock' && dir=='asc' ? 'desc' : 'asc'})}">库存<span class="arrow" th:if="${sort=='stock'}" th:text="${dir=='asc' ? ' ↑' : ' ↓'}"></span></a></th>
+                    <th><a th:href="@{/products(keyword=${keyword},categoryId=${categoryId},brandId=${brandId},sort='sales',dir=${sort=='sales' && dir=='asc' ? 'desc' : 'asc'})}">销量<span class="arrow" th:if="${sort=='sales'}" th:text="${dir=='asc' ? ' ↑' : ' ↓'}"></span></a></th>
+                    <th style="width:90px"><a th:href="@{/products(keyword=${keyword},categoryId=${categoryId},brandId=${brandId},sort='status',dir=${sort=='status' && dir=='asc' ? 'desc' : 'asc'})}">状态<span class="arrow" th:if="${sort=='status'}" th:text="${dir=='asc' ? ' ↑' : ' ↓'}"></span></a></th>
+                    <th th:if="${loginUser.admin}" style="width:190px">操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${products}">
+                    <td style="color:var(--text-3)" th:text="${p.id}">1</td>
+                    <td>
+                        <div class="p-name" th:text="${p.name}">商品名</div>
+                        <div class="p-desc" th:text="${p.description}">描述</div>
+                    </td>
+                    <td><span class="cat-tag"><span th:text="${p.category.icon}">📱</span><span th:text="${p.category.name}">分类</span></span></td>
+                    <td th:text="${p.brand != null ? p.brand.name : '—'}">品牌</td>
+                    <td class="price" th:text="'¥' + ${#numbers.formatDecimal(p.price, 1, 'COMMA', 2, 'POINT')}">¥0.00</td>
+                    <td>
+                        <span th:text="${p.stock}" th:style="${p.stock < 50} ? 'color:var(--danger);font-weight:700'">0</span>
+                        <span style="color:var(--danger);font-size:11px" th:if="${p.stock < 50}"> 预警</span>
+                    </td>
+                    <td th:text="${p.sales}">0</td>
+                    <td>
+                        <form class="inline-form" th:if="${loginUser.admin}" th:action="@{'/products/' + ${p.id} + '/toggle'}" method="post"
+                              th:attr="title=${p.status == 1 ? '点击下架' : '点击上架'}">
+                            <input type="hidden" name="keyword" th:value="${keyword}">
+                            <input type="hidden" name="categoryId" th:value="${categoryId}">
+                            <input type="hidden" name="brandId" th:value="${brandId}">
+                            <input type="hidden" name="sort" th:value="${sort}">
+                            <input type="hidden" name="dir" th:value="${dir}">
+                            <button type="submit" class="switch" th:classappend="${p.status == 1} ? 'on' : 'off'">
+                                <span class="knob"></span>
+                            </button>
+                        </form>
+                        <span class="badge-on" th:if="${!loginUser.admin && p.status == 1}">在售</span>
+                        <span class="badge-off" th:if="${!loginUser.admin && p.status != 1}">已下架</span>
+                    </td>
+                    <td th:if="${loginUser.admin}">
+                        <div class="op">
+                            <a class="btn btn-edit btn-sm" th:href="@{'/products/' + ${p.id} + '/edit'}">✏️ 编辑</a>
+                            <form class="inline-form" th:action="@{'/products/' + ${p.id} + '/delete'}" method="post"
+                                  onsubmit="return confirm('确定删除商品「'+this.dataset.name+'」吗？此操作不可恢复。');"
+                                  th:attr="data-name=${p.name}">
+                                <button type="submit" class="btn btn-danger btn-sm">🗑️ 删除</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(products)}">
+                    <td colspan="9" class="empty-tip" style="padding:60px 0">😕 没有找到符合条件的商品，换个关键字或筛选试试</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

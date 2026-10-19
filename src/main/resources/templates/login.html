@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 · 水果销售系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1e2440 0%, #312e81 55%, #4f46e5 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        body::before, body::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(2px);
+            opacity: .25;
+        }
+        body::before { width: 420px; height: 420px; background: #8b5cf6; top: -140px; left: -120px; }
+        body::after { width: 360px; height: 360px; background: #0ea5e9; bottom: -130px; right: -100px; opacity: .18; }
+
+        .login-card {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, .97);
+            width: 400px;
+            padding: 42px 38px 34px;
+            border-radius: 18px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, .35);
+        }
+        .logo-row { text-align: center; margin-bottom: 8px; }
+        .logo-badge {
+            width: 62px; height: 62px;
+            margin: 0 auto 14px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 30px;
+            box-shadow: 0 10px 24px rgba(99, 102, 241, .45);
+        }
+        .login-card h1 { font-size: 22px; color: #1f2937; }
+        .login-card .sub { font-size: 12px; color: #9ca3af; letter-spacing: 2px; margin-top: 4px; }
+
+        .error-box {
+            background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
+            padding: 10px 14px; border-radius: 10px; font-size: 13px;
+            margin: 22px 0 4px;
+        }
+        .field { margin-top: 18px; }
+        .field label { display: block; font-size: 13px; color: #4b5563; font-weight: 600; margin-bottom: 7px; }
+        .field input {
+            width: 100%; padding: 12px 14px;
+            border: 1.5px solid #e5e7eb; border-radius: 10px;
+            font-size: 14px; outline: none; transition: all .15s;
+        }
+        .field input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,.12); }
+        .captcha-row { display: flex; gap: 8px; align-items: center; }
+        .captcha-row input { flex: 1; }
+        .captcha-img {
+            width: 120px; height: 42px;
+            border: 1.5px solid #e5e7eb; border-radius: 10px;
+            cursor: pointer; flex: none;
+        }
+        .btn-login {
+            width: 100%; margin-top: 24px;
+            padding: 12px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #fff; border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 600; letter-spacing: 4px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, .38);
+            transition: transform .15s;
+        }
+        .btn-login:hover { transform: translateY(-2px); }
+        .remember-row {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            margin-top: 14px; font-size: 13px; color: #6b7280; cursor: pointer;
+        }
+        .remember-row input { accent-color: #6366f1; width: 15px; height: 15px; cursor: pointer; }
+        .accounts {
+            margin-top: 24px; padding-top: 18px;
+            border-top: 1px dashed #e5e7eb;
+            display: flex; gap: 10px;
+        }
+        .acc {
+            flex: 1; background: #f8f9ff; border: 1px solid #eef0ff;
+            border-radius: 10px; padding: 10px; font-size: 12px; color: #6b7280; line-height: 1.7;
+            text-align: center;
+        }
+        .acc b { color: #4f46e5; }
+    </style>
+</head>
+<body>
+<div class="login-card">
+    <div class="logo-row">
+        <div class="logo-badge">🍓</div>
+        <h1>水果销售系统</h1>
+        <div class="sub">FRUIT SHOP</div>
+    </div>
+
+    <div class="error-box" th:if="${error}" th:text="${error}"></div>
+
+    <form th:action="@{/login}" method="post">
+        <div class="field">
+            <label for="username">用户名</label>
+            <input type="text" id="username" name="username" th:value="${username}" placeholder="请输入用户名" required autofocus>
+        </div>
+        <div class="field">
+            <label for="password">密码</label>
+            <input type="password" id="password" name="password" placeholder="请输入密码" required>
+        </div>
+        <div class="field">
+            <label for="captcha">验证码</label>
+            <div class="captcha-row">
+                <input type="text" id="captcha" name="captcha" placeholder="请输入验证码" required autocomplete="off" maxlength="4">
+                <img class="captcha-img" th:src="@{/captcha}" alt="验证码" title="点击刷新" onclick="this.src='/captcha?_='+Date.now()">
+            </div>
+        </div>
+        <button type="submit" class="btn-login">登 录</button>
+    </form>
+</div>
+</body>
+</html>

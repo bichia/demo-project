@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('购物车')}"></head>
+<body>
+<aside th:replace="~{fragments :: sidebar('cart')}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('购物车', '确认商品和数量后去结算')}"></header>
+
+    <main class="content">
+        <div class="flash" th:if="${message}">✅ <span th:text="${message}"></span></div>
+        <div class="flash error" th:if="${error}">⚠️ <span th:text="${error}"></span></div>
+
+        <div th:if="${!cartItems.isEmpty()}">
+            <!-- 购物车列表 -->
+            <div class="card cart-card">
+                <div class="card-title"><span class="bar"></span>🛒 购物清单 <small style="font-weight:400;color:var(--text-3)">共 <span th:text="${totalItems}">0</span> 件商品</small></div>
+                <table class="cart-table">
+                    <thead>
+                    <tr>
+                        <th style="width:46%">商品信息</th>
+                        <th style="width:12%">单价</th>
+                        <th style="width:16%">数量</th>
+                        <th style="width:12%">小计</th>
+                        <th style="width:10%">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${cartItems}">
+                        <td>
+                            <div class="cart-product">
+                                <div class="cart-thumb">
+                                    <img th:if="${item.product.imageUrl != null and !item.product.imageUrl.isEmpty()}"
+                                         th:src="${item.product.imageUrl}" alt=""
+                                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                                    <span class="cart-thumb-fallback" style="display:none">📦</span>
+                                </div>
+                                <div class="cart-product-info">
+                                    <div class="cart-product-name" th:text="${item.product.name}">商品名</div>
+                                    <div class="cart-product-tags">
+                                        <span class="pc-tag" th:text="${item.product.category.icon} + ' ' + ${item.product.category.name}">分类</span>
+                                        <span class="pc-tag" th:if="${item.product.brand != null}" th:text="${item.product.brand.name}">品牌</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="price" th:text="'¥' + ${#numbers.formatDecimal(item.product.price, 1, 'COMMA', 2, 'POINT')}">¥0.00</td>
+                        <td>
+                            <form th:action="@{'/cart/' + ${item.id} + '/update'}" method="post" class="qty-form">
+                                <button type="button" class="qty-btn" onclick="this.nextElementSibling.stepDown();this.form.submit()">−</button>
+                                <input type="number" class="qty-input" name="quantity" th:value="${item.quantity}" min="1" max="9999" onchange="this.form.submit()">
+                                <button type="button" class="qty-btn" onclick="this.previousElementSibling.stepUp();this.form.submit()">+</button>
+                            </form>
+                        </td>
+                        <td class="price subtotal" th:text="'¥' + ${#numbers.formatDecimal(item.product.price.doubleValue() * item.quantity, 1, 'COMMA', 2, 'POINT')}">¥0.00</td>
+                        <td>
+                            <form th:action="@{'/cart/' + ${item.id} + '/remove'}" method="post" class="inline-form">
+                                <button type="submit" class="btn btn-danger btn-sm">🗑️ 移除</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 收货地址 + 结算栏 -->
+            <div class="cart-checkout-bar">
+                <form th:action="@{/orders/checkout}" method="post" class="checkout-form">
+                    <div class="checkout-addr">
+                        <span class="addr-label">📍 收货地址</span>
+                        <input type="text" name="address" placeholder="请输入收货地址（选填）" maxlength="200">
+                    </div>
+                    <div class="checkout-right">
+                        <div class="cart-checkout-info">
+                            <span>共 <b th:text="${totalItems}">0</b> 件</span>
+                            <span>合计：<span class="cart-total"><span class="yen">¥</span><span class="num" th:text="${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></span></span>
+                        </div>
+                        <button type="submit" class="btn-checkout">提交订单</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 空购物车 -->
+        <div class="cart-empty" th:if="${cartItems.isEmpty()}">
+            <div class="big">🛒</div>
+            <p>购物车空空如也～</p>
+            <a class="btn btn-primary" th:href="@{/shop}">去逛商城</a>
+        </div>
+    </main>
+</div>
+</body>
+</html>

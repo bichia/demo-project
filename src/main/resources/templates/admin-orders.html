@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('订单管理')}"></head>
+<body>
+<aside th:replace="~{fragments :: sidebar('adminOrders')}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('订单管理', '处理买家订单，安排发货')}"></header>
+
+    <main class="content">
+        <div class="flash" th:if="${message}">✅ <span th:text="${message}"></span></div>
+        <div class="flash error" th:if="${error}">⚠️ <span th:text="${error}"></span></div>
+
+        <!-- 订单状态概览 -->
+        <div class="admin-order-stats">
+            <a class="ao-stat" th:classappend="${status == null} ? ' active'" th:href="@{/admin/orders}">
+                <div class="ao-num" th:text="${totalOrders}">0</div>
+                <div class="ao-label">全部订单</div>
+            </a>
+            <a class="ao-stat c-orange" th:classappend="${status == 'PENDING'} ? ' active'" th:href="@{/admin/orders(status='PENDING')}">
+                <div class="ao-num" th:text="${pendingPay}">0</div>
+                <div class="ao-label">待付款</div>
+            </a>
+            <a class="ao-stat c-blue" th:classappend="${status == 'PAID'} ? ' active'" th:href="@{/admin/orders(status='PAID')}">
+                <div class="ao-num" th:text="${paidCount}">0</div>
+                <div class="ao-label">待发货</div>
+            </a>
+            <a class="ao-stat c-purple" th:classappend="${status == 'SHIPPED'} ? ' active'" th:href="@{/admin/orders(status='SHIPPED')}">
+                <div class="ao-num" th:text="${shippedCount}">0</div>
+                <div class="ao-label">待收货</div>
+            </a>
+            <a class="ao-stat c-green" th:classappend="${status == 'COMPLETED'} ? ' active'" th:href="@{/admin/orders(status='COMPLETED')}">
+                <div class="ao-num" th:text="${completedCount}">0</div>
+                <div class="ao-label">已完成</div>
+            </a>
+        </div>
+
+        <!-- 订单列表 -->
+        <div class="card" th:if="${!orders.isEmpty()}">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th style="width:110px">订单号</th>
+                    <th style="width:100px">买家</th>
+                    <th>商品</th>
+                    <th style="width:110px">金额</th>
+                    <th style="width:90px">状态</th>
+                    <th style="width:150px">下单时间</th>
+                    <th style="width:110px">操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="o : ${orders}">
+                    <td><b th:text="${o.id}">#001</b></td>
+                    <td>
+                        <span class="buyer-tag">👤 <span th:text="${o.user.username}">user</span></span>
+                    </td>
+                    <td>
+                        <div class="admin-order-goods">
+                            <span th:each="oi : ${o.items}" class="aog-item"
+                                  th:text="${oi.productName} + ' ×' + ${oi.quantity}">水果×1</span>
+                        </div>
+                        <div class="admin-order-addr" th:if="${o.address != null and !o.address.isEmpty()}">
+                            📍 <span th:text="${o.address}">地址</span>
+                        </div>
+                    </td>
+                    <td><span class="price" th:text="'¥' + ${#numbers.formatDecimal(o.totalAmount, 1, 'COMMA', 2, 'POINT')}">¥0</span></td>
+                    <td>
+                        <span class="order-status"
+                              th:classappend="${o.status == 'PENDING'} ? ' pending' : (${o.status == 'PAID'} ? ' paid' : (${o.status == 'SHIPPED'} ? ' shipped' : (${o.status == 'COMPLETED'} ? ' completed' : ' cancelled')))"
+                              th:text="${o.status == 'PENDING' ? '待付款' : (o.status == 'PAID' ? '待发货' : (o.status == 'SHIPPED' ? '待收货' : (o.status == 'COMPLETED' ? '已完成' : '已取消')))}">状态</span>
+                    </td>
+                    <td class="text-3" th:text="${#temporals.format(o.createTime, 'MM-dd HH:mm')}">时间</td>
+                    <td>
+                        <a class="btn btn-ghost btn-sm" th:href="@{'/orders/' + ${o.id}}">详情</a>
+                        <form th:if="${o.status == 'PAID'}" th:action="@{'/admin/orders/' + ${o.id} + '/ship'}" method="post" class="inline-form">
+                            <input type="hidden" name="status" th:value="${status}">
+                            <button type="submit" class="btn btn-primary btn-sm">🚚 发货</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="cart-empty" th:if="${orders.isEmpty()}">
+            <div class="big">📭</div>
+            <p>暂无相关订单</p>
+        </div>
+    </main>
+</div>
+</body>
+</html>

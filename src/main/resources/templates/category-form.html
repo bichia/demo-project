@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head(${category.id} == null ? '新增分类' : '编辑分类')}"></head>
+<body>
+<aside th:replace="~{fragments :: sidebar('categories')}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar(${category.id} == null ? '新增分类' : '编辑分类', '维护商品分类信息')}"></header>
+
+    <main class="content">
+        <div class="card form-card">
+            <div class="card-title">
+                <span class="bar"></span>
+                <span th:text="${category.id} == null ? '创建新的水果分类' : '修改分类信息'">表单</span>
+            </div>
+
+            <form th:action="@{/categories/save}" method="post">
+                <input type="hidden" name="id" th:value="${category.id}">
+
+                <div class="form-grid">
+                    <div class="form-item">
+                        <label>分类名称 <span class="req">*</span></label>
+                        <input type="text" name="name" th:value="${category.name}" maxlength="50" placeholder="例如：美妆个护" required>
+                    </div>
+
+                    <div class="form-item">
+                        <label>分类图标（Emoji）</label>
+                        <input type="text" name="icon" th:value="${category.icon}" maxlength="10" placeholder="💄" style="font-size:18px">
+                        <div class="hint">直接输入一个 emoji 表情作为图标，留空默认 🏷️</div>
+                    </div>
+
+                    <div class="form-item full">
+                        <label>分类描述</label>
+                        <input type="text" name="description" th:value="${category.description}" maxlength="200" placeholder="简单描述这个分类包含哪些商品">
+                    </div>
+
+                    <div class="form-item">
+                        <label>排序值</label>
+                        <input type="number" name="sortOrder" th:value="${category.sortOrder} ?: 99" min="1" step="1">
+                        <div class="hint">数值越小，在列表中越靠前</div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 保存分类</button>
+                    <a th:href="@{/categories}" class="btn btn-ghost">取消返回</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

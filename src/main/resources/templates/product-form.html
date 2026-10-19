@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head(${product.id} == null ? '新增商品' : '编辑商品')}"></head>
+<body>
+<aside th:replace="~{fragments :: sidebar('products')}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar(${product.id} == null ? '新增商品' : '编辑商品 #' + ${product.id}, '商品信息维护')}"></header>
+
+    <main class="content">
+        <div class="card form-card">
+            <div class="card-title">
+                <span class="bar"></span>
+                <span th:text="${product.id} == null ? '填写新商品信息' : '修改商品信息'">表单</span>
+            </div>
+
+            <form th:action="@{/products/save}" method="post">
+                <input type="hidden" name="id" th:value="${product.id}">
+
+                <div class="form-grid">
+                    <div class="form-item full">
+                        <label>商品名称 <span class="req">*</span></label>
+                        <input type="text" name="name" th:value="${product.name}" maxlength="100" placeholder="例如：阿克苏冰糖心苹果 5斤装" required>
+                    </div>
+
+                    <div class="form-item">
+                        <label>商品分类 <span class="req">*</span></label>
+                        <select name="categoryId" required>
+                            <option value="">请选择分类</option>
+                            <option th:each="c : ${categories}"
+                                    th:value="${c.id}"
+                                    th:selected="${product.category != null && product.category.id == c.id}"
+                                    th:text="${c.icon} + ' ' + ${c.name}">分类</option>
+                        </select>
+                        <div class="hint">没有合适的分类？先去「分类管理」新建一个</div>
+                    </div>
+
+                    <div class="form-item">
+                        <label>产地品牌</label>
+                        <select name="brandId">
+                            <option value="">未选择品牌</option>
+                            <option th:each="b : ${brands}"
+                                    th:value="${b.id}"
+                                    th:selected="${product.brand != null && product.brand.id == b.id}"
+                                    th:text="${b.logo} + ' ' + ${b.name}">品牌</option>
+                        </select>
+                        <div class="hint">没有合适的品牌？先去「品牌管理」新建一个</div>
+                    </div>
+
+                    <div class="form-item full">
+                        <label>商品主图链接</label>
+                        <input type="url" name="imageUrl" th:value="${product.imageUrl}" maxlength="600" placeholder="https://...（留空则商城页显示默认占位图）">
+                        <div class="hint">填写商品图片地址，将在商城浏览页卡片上展示</div>
+                    </div>
+
+                    <div class="form-item">
+                        <label>商品状态</label>
+                        <select name="status">
+                            <option value="1" th:selected="${product.status == null || product.status == 1}">🟢 立即上架</option>
+                            <option value="0" th:selected="${product.status != null && product.status == 0}">⚪ 暂不上架</option>
+                        </select>
+                    </div>
+
+                    <div class="form-item">
+                        <label>销售价格（元） <span class="req">*</span></label>
+                        <input type="number" name="price" th:value="${product.price}" min="0" step="0.01" placeholder="0.00" required>
+                    </div>
+
+                    <div class="form-item">
+                        <label>库存数量 <span class="req">*</span></label>
+                        <input type="number" name="stock" th:value="${product.stock}" min="0" step="1" placeholder="0" required>
+                        <div class="hint">库存低于 50 件会在仪表盘预警</div>
+                    </div>
+
+                    <div class="form-item full">
+                        <label>累计销量</label>
+                        <input type="number" name="sales" th:value="${product.sales}" min="0" step="1" style="max-width:240px">
+                    </div>
+
+                    <div class="form-item full">
+                        <label>商品描述</label>
+                        <textarea name="description" maxlength="500" placeholder="一句话介绍商品卖点（最多 500 字）" th:text="${product.description}"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 保存商品</button>
+                    <a th:href="@{/products}" class="btn btn-ghost">取消返回</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

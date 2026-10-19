@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head(${brand.id} == null ? '新增品牌' : '编辑品牌')}"></head>
+<body>
+<aside th:replace="~{fragments :: sidebar('brands')}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar(${brand.id} == null ? '新增品牌' : '编辑品牌', '维护商品品牌信息')}"></header>
+
+    <main class="content">
+        <div class="card form-card">
+            <div class="card-title">
+                <span class="bar"></span>
+                <span th:text="${brand.id} == null ? '创建新的产地品牌' : '修改品牌信息'">表单</span>
+            </div>
+
+            <form th:action="@{/brands/save}" method="post">
+                <input type="hidden" name="id" th:value="${brand.id}">
+
+                <div class="form-grid">
+                    <div class="form-item">
+                        <label>品牌名称 <span class="req">*</span></label>
+                        <input type="text" name="name" th:value="${brand.name}" maxlength="50" placeholder="例如：三星" required>
+                    </div>
+
+                    <div class="form-item">
+                        <label>品牌图标（Emoji）</label>
+                        <input type="text" name="logo" th:value="${brand.logo}" maxlength="10" placeholder="⭐" style="font-size:18px">
+                        <div class="hint">输入一个 emoji 作为品牌标识，留空则显示名称首字</div>
+                    </div>
+
+                    <div class="form-item full">
+                        <label>品牌描述</label>
+                        <input type="text" name="description" th:value="${brand.description}" maxlength="200" placeholder="简单描述这个品牌">
+                    </div>
+
+                    <div class="form-item">
+                        <label>排序值</label>
+                        <input type="number" name="sortOrder" th:value="${brand.sortOrder} ?: 99" min="1" step="1">
+                        <div class="hint">数值越小，在列表中越靠前</div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 保存品牌</button>
+                    <a th:href="@{/brands}" class="btn btn-ghost">取消返回</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

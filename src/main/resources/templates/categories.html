@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('分类管理')}"></head>
+<body>
+<aside th:replace="~{fragments :: sidebar('categories')}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('分类管理', '商品分类的新增、编辑与删除')}"></header>
+
+    <main class="content">
+        <div class="flash" th:if="${message}">✅ <span th:text="${message}"></span></div>
+        <div class="flash error" th:if="${error}">⚠️ <span th:text="${error}"></span></div>
+
+        <!-- 分类商品分布可视化 -->
+        <div class="viz-card" th:if="${!categoryStats.isEmpty()}">
+            <div class="card-title"><span class="bar"></span>📊 分类商品分布图</div>
+            <div class="viz-bars">
+                <div class="viz-bar-row" th:each="c : ${categoryStats}">
+                    <span class="v-name"><span th:text="${c.icon}">📱</span><span th:text="${c.name}">分类</span></span>
+                    <span class="viz-bar-track">
+                        <span class="viz-bar-fill" th:style="'width:' + ${c.percent} + '%'" th:text="${c.percent} + '%'">50%</span>
+                    </span>
+                    <span class="viz-bar-val" th:text="${c.productCount} + ' 件 · 库存' + ${c.stock}">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div style="color:var(--text-2);font-size:13px">
+                共 <b th:text="${#lists.size(categories)}" style="color:var(--text)">0</b> 个水果分类
+            </div>
+            <a class="btn btn-primary" th:if="${loginUser.admin}" th:href="@{/categories/new}">➕ 新增分类</a>
+        </div>
+
+        <div class="cat-grid">
+            <div class="cat-card" th:each="c : ${categories}">
+                <div class="big-icon" th:text="${c.icon}">📱</div>
+                <h3 th:text="${c.name}">分类名</h3>
+                <div class="c-desc" th:text="${c.description} ?: '（暂无描述）'">描述</div>
+                <div class="c-meta">
+                    <span><b th:text="${productCountMap[c.id]} ?: 0">0</b>件商品</span>
+                    <span>排序值 <b th:text="${c.sortOrder}">99</b></span>
+                </div>
+                <div class="c-actions" th:if="${loginUser.admin}">
+                    <a class="btn btn-edit btn-sm" th:href="@{/products(categoryId=${c.id})}">查看商品</a>
+                    <a class="btn btn-ghost btn-sm" th:href="@{'/categories/' + ${c.id} + '/edit'}">✏️ 编辑</a>
+                    <form class="inline-form" th:action="@{'/categories/' + ${c.id} + '/delete'}" method="post"
+                          onsubmit="return confirm('确定删除分类「'+this.dataset.name+'」吗？');"
+                          th:attr="data-name=${c.name}">
+                        <button type="submit" class="btn btn-danger btn-sm">🗑️ 删除</button>
+                    </form>
+                </div>
+                <div class="c-actions" th:unless="${loginUser.admin}">
+                    <a class="btn btn-ghost btn-sm" th:href="@{/products(categoryId=${c.id})}">查看该分类商品 →</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

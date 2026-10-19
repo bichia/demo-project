@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('订单详情')}"></head>
+<body>
+<aside th:replace="~{fragments :: sidebar('orders')}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('订单详情', '订单 #' + ${order.id})}"></header>
+
+    <main class="content">
+        <div class="flash" th:if="${message}">✅ <span th:text="${message}"></span></div>
+        <div class="flash error" th:if="${error}">⚠️ <span th:text="${error}"></span></div>
+
+        <!-- 订单状态条 -->
+        <div class="order-status-bar"
+             th:classappend="${order.status == 'CANCELLED'} ? ' bar-cancelled' : (${order.status == 'COMPLETED'} ? ' bar-completed' : '')">
+            <div class="order-status-detail">
+                <div class="status-icon">
+                    <span th:text="${order.status == 'PENDING' ? '⏳' : (order.status == 'PAID' ? '📦' : (order.status == 'SHIPPED' ? '🚚' : (order.status == 'COMPLETED' ? '✅' : '❌')))}">⏳</span>
+                </div>
+                <div>
+                    <div class="status-text" th:text="${order.status == 'PENDING' ? '等待买家付款' : (order.status == 'PAID' ? '买家已付款，等待卖家发货' : (order.status == 'SHIPPED' ? '卖家已发货，等待收货' : (order.status == 'COMPLETED' ? '交易完成' : '订单已取消')))}">状态</div>
+                    <div class="status-time">
+                        下单：<span th:text="${#temporals.format(order.createTime, 'yyyy-MM-dd HH:mm:ss')}">时间</span>
+                        <span th:if="${order.payTime != null}"> · 付款：<span th:text="${#temporals.format(order.payTime, 'MM-dd HH:mm:ss')}"></span></span>
+                        <span th:if="${order.shipTime != null}"> · 发货：<span th:text="${#temporals.format(order.shipTime, 'MM-dd HH:mm:ss')}"></span></span>
+                        <span th:if="${order.completeTime != null}"> · 完成：<span th:text="${#temporals.format(order.completeTime, 'MM-dd HH:mm:ss')}"></span></span>
+                    </div>
+                </div>
+            </div>
+            <!-- 买家操作 -->
+            <div class="order-actions" th:if="${!loginUser.admin}">
+                <form th:if="${order.status == 'PENDING'}" th:action="@{'/orders/' + ${order.id} + '/pay'}" method="post" class="inline-form">
+                    <button type="submit" class="btn btn-primary">💳 立即付款</button>
+                </form>
+                <form th:if="${order.status == 'SHIPPED'}" th:action="@{'/orders/' + ${order.id} + '/confirm'}" method="post" class="inline-form"
+                      onsubmit="return confirm('确认已收到水果？');">
+                    <button type="submit" class="btn btn-primary">✅ 确认收货</button>
+                </form>
+                <form th:if="${order.status == 'PENDING'}" th:action="@{'/orders/' + ${order.id} + '/cancel'}" method="post" class="inline-form"
+                      onsubmit="return confirm('确定取消此订单吗？');">
+                    <button type="submit" class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.5)">取消订单</button>
+                </form>
+            </div>
+            <!-- 卖家操作 -->
+            <div class="order-actions" th:if="${loginUser.admin and order.status == 'PAID'}">
+                <form th:action="@{'/admin/orders/' + ${order.id} + '/ship'}" method="post" class="inline-form">
+                    <button type="submit" class="btn btn-primary">🚚 立即发货</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 收货信息 -->
+        <div class="card" style="margin-top:18px" th:if="${order.address != null and !order.address.isEmpty()}">
+            <div class="card-title"><span class="bar"></span>📍 收货信息</div>
+            <div style="padding:4px 0;font-size:14px">
+                收货人：<b th:text="${order.user.username}">user</b>
+                &nbsp;&nbsp;地址：<span th:text="${order.address}">地址</span>
+            </div>
+        </div>
+
+        <!-- 订单商品 -->
+        <div class="card" style="margin-top:18px">
+            <div class="card-title"><span class="bar"></span>🍓 水果清单</div>
+            <table class="cart-table">
+                <thead>
+                <tr>
+                    <th style="width:50%">水果</th>
+                    <th style="width:15%">单价</th>
+                    <th style="width:15%">数量</th>
+                    <th style="width:20%">小计</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="oi : ${order.items}">
+                    <td>
+                        <div class="cart-product">
+                            <div class="cart-thumb">
+                                <img th:if="${oi.productImage != null and !oi.productImage.isEmpty()}" th:src="${oi.productImage}" alt=""
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                                <span class="cart-thumb-fallback" style="display:none">🍓</span>
+                            </div>
+                            <div class="cart-product-info">
+                                <div class="cart-product-name" th:text="${oi.productName}">水果名</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="price" th:text="'¥' + ${#numbers.formatDecimal(oi.price, 1, 'COMMA', 2, 'POINT')}">¥0.00</td>
+                    <td th:text="${oi.quantity}">1</td>
+                    <td class="price subtotal" th:text="'¥' + ${#numbers.formatDecimal(oi.subtotal, 1, 'COMMA', 2, 'POINT')}">¥0.00</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="order-total-row">
+                <span>订单总额：</span>
+                <span class="cart-total"><span class="yen">¥</span><span class="num" th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">0.00</span></span>
+            </div>
+        </div>
+
+        <div style="margin-top:18px">
+            <a class="btn btn-ghost" th:href="@{${loginUser.admin} ? '/admin/orders' : '/orders'}">← 返回订单列表</a>
+        </div>
+    </main>
+</div>
+</body>
+</html>
